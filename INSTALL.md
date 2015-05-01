@@ -2,7 +2,7 @@
 
 This document is a part of the Baïkal project. Baïkal is an open
 source lightweight CalDAV and CardDAV server released under the GNU GPL. Baïkal
-is copyright (c) 2013 by Jérôme Schneider.
+is copyright (c) 2013-2014 Net Gusto.
 
 Baïkal homepage is http://baikal-server.com
 
@@ -11,14 +11,16 @@ installation routine.
 
 # 1 - System requirements
 
-Baïkal is based on PHP 5.3.1+, and uses a SQLite3 or MySQL with PHP PDO. This
+Baïkal is based on PHP 5.3.1+, and uses a SQLite3 or MySQL 5.5+ with PHP PDO. This
 document does not cover the installation of these requirements.
 
 ## 1.1 - System requirements for FTP-driven hosting
 
 The following configuration is the minimum required:
 
-- an hosted webserver running apache 2 and PHP 5.3.0
+- an hosted webserver running apache 2 and PHP 5.3.1+
+
+- SQLite3 or MySQL 5.5+
 
 - PHP 5.3.1 or newer with the following extensions: 
 	- PDO and SQLite3 or MySQL 
@@ -46,6 +48,8 @@ The following configuration is the minimum required:
 	- DOM (php-xml) 
 	Some extensions can be optionally compiled into PHP. A list of loaded
 	extensions can be checked using the phpinfo() function. 
+
+- SQLite3 or MySQL 5.5+
 
 - 30 MB of disk space 
 
@@ -284,6 +288,10 @@ Add a new CalDAV account:
 * Navigate to "Lightning" > "New account" > "On the network" > "URL"
 * paste this URL: http://dav.mydomain.com/cal.php/calendars/username/default of and replace the domain name, and the username with the correct values
 * When asked, provide user/password; your CalDAV account should be up and running
+* Note: if you need to get access to multiple Baikal accounts on the same server, you need to change the multirealm settings in Thunderbirds about:config. Go to "Tools" => "Options" => "Advanced" => "Config Editor". Search for "calendar.network.multirealm" and change the default (false) to "true". Delete all passwords and restart Thunderbird. Now each calendar asks for a user / password.
+
+**Hint**: Thunderbird's password manager can only store one authentication per auth realm. Thus you can't use two calendars with two different credentials. This problem can be solved by adding the credentials to the URL, like `http://username:password@dav.mydomain.com/cal.php/calendars/username/default`
+
 
 ## 5.7 BlackBerry OS10
 
@@ -309,6 +317,80 @@ __Important notes:__
 * Make sure you've configured Baikal to use `basic` as authentication mechanism.
 * Its required to use SSL for CardDAV!
 
+## 5.8 Windows Phone 8.1 (Developer Preview)
+
+Add a new CalDAV/CardDAV account:
+
+* in Settings > email+accounts > Add an Account > iCloud
+* Username: the username you just created
+* Password: the password you just defined
+* Select Advanced Settings
+* Contacts server (CardDAV): `dav.mydomain.com/card.php/addressbooks/username/default` and replace domain and username with the correct values
+* Calendar server (CalDAV): `dav.mydomain.com/cal.php/calendars/username/default` and replace domain and username with the correct values
+* You can optional activate/deactivate content that will be synced
+
+## 5.9 Android (4.1.2) SG2
+
+Add a new CalDAV account:
+
+* Download a DAV Sync Client (i.e. DAVdroid; if DAVdroid, see 5.10 below also)
+* Add a new DAVdroid account
+* I.e. enter the following URL-Format for CalDAV: `http://dav.mydomain.com/cal.php/calendars/<username>/default/ or http://YOUR_IP/cal.php/calendars/<username>/default/`
+* Use your email-address as account name
+* Mark your calendar as active on your device: In the Calendar-App select Settings/Calendar and activate it.
+* Sync it
+
+Add a new CardDAV account:
+
+* Add a new DAVdroid account
+* I.e. enter the following URL-Format for CalDAV: `http://dav.mydomain.com/card.php/addressbooks/<username>/default/ or http://YOUR_IP/card.php/addressbooks/<username>/default/`
+* Use your email-address as account name
+* In the Phone-App select Contacts/Accounts select the 2nd DAVdroid and Synchronize Contacts.
+* Sync it
+
+__Note__
+* If you want to synchronize your current contacts to the server export it to USB and Import it again as DAVdroid contacts
+* Sync it
+
+
+## 5.10 DAVdroid (Android)
+
+Android does not support CardDAV or CalDAV out of the box so you'll need a 3rd party client. There are multiple options available. Here we'll have a look at [DAVdroid](http://davdroid.bitfire.at/), an open-source CalDAV/CardDAV synchronization app for Android 4+. The app is available on [many different stores](http://davdroid.bitfire.at/download), and even on the FOSS [F-Droid](https://f-droid.org/repository/browse/?fdfilter=carddav&fdid=at.bitfire.davdroid) one. Install the app from your favourite store.
+
+Add a CalDAV account:
+
+* In Settings > Accounts > Add account
+* Tap DAVdroid
+* Follow the wizard
+    * Select `http://` or `https://` and add the path to your CalDAV server: `dav.mydomain.com/cal.php/principals/jerome` (replace domain and username)
+    * User name: the username you just created (in our example, jerome)
+    * Password: the password you just defined
+    * Leave the preemptive authentication `checked`
+    * Tap `→`
+* Select the calendar(s) you want to sync
+* Tap `→`
+* Choose a unique account name (has to be different from the CardDAV one)
+* Tap `✓`
+
+DAVdroid should now start syncing your calendar(s), give it some time.
+
+Add a CardDAV account:
+
+* In Settings > Accounts > Add account
+* Tap DAVdroid
+* Follow the wizard
+    * Select `http://` or `https://` and add the path to your CardDAV server: `dav.mydomain.com/card.php/addressbooks/jerome/default` (replace domain and username)
+    * User name: the username you just created (in our example, jerome)
+    * Password: the password you just defined
+    * Leave the preemptive authentication `checked`
+    * Tap `→`
+* Select the address book you want to sync
+* Tap `→`
+* Choose a unique account name (has to be different from the CalDAV one)
+* Tap `✓`
+
+DAVdroid should now start syncing your address book, give it some time.
+
 # 6 - You're done
 
 You may now create new calendars, new events, new contact (: Enjoy.
@@ -329,7 +411,7 @@ mysql -u root -p #password#
 
 ```mysql
 CREATE DATABASE baikal;
-GRANT DELETE, INSERT, SELECT, UPDATE ON baikal.* TO 'baikal'@'localhost' IDENTIFIED BY '#password#';
+GRANT DELETE, INSERT, SELECT, UPDATE, CREATE ON baikal.* TO 'baikal'@'localhost' IDENTIFIED BY '#password#';
 exit
 ```
 
